@@ -1,0 +1,1 @@
+// souche client-side javascript
