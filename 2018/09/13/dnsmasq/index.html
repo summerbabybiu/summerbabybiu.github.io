@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><meta name="generator" content="Hexo 3.8.0"><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> dnsmasq 的使用手册 · Hexo</title><meta name="description" content="dnsmasq 的使用手册 - summerbaby"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.jpg"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="Hexo"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.jpg" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="https://github.com/summerbabybiu" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">dnsmasq 的使用手册</h1><div class="post-info">Sep 13, 2018</div><div class="post-content"><p>如何更好的用手机调试本地的页面、接口？<br>我选择在本地搭建了 DNS 服务器。<br>dnsmasq 轻量且易配置，提供 DNS 缓存和 DHCP 服务功能。</p>
+<a id="more"></a>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>使用 brew 直接安装<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ brew install dnsmasq</span><br></pre></td></tr></table></figure></p>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><h3 id="配置-usr-local-etc-dnsmasq-conf"><a href="#配置-usr-local-etc-dnsmasq-conf" class="headerlink" title="配置 /usr/local/etc/dnsmasq.conf"></a>配置 <code>/usr/local/etc/dnsmasq.conf</code></h3><p>以下我提供的是最常见的配置</p>
+<ul>
+<li><p>resolv-file<br>指定 dns 解析的文件, 默认是 /etc/resolv.conf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">resolv-file=/usr/local/etc/resolv.dnsmasq.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>strict-order<br>表示严格按照 resolv-file 文件中的顺序从上到下进行 DNS 解析, 直到第一个成功解析成功为止</p>
+</li>
+<li><p>listen-address<br>监听地址，172.17.9.78为局域网分配给我本机的IP，如果只填写127.0.0.1，那么只针对本机有效，局域网内的其他服务器则无法访问这个 DNS 服务器。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">listen-address=172.17.9.78,127.0.0.1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>no-hosts<br>dnsmasq 首先会寻找本地的 /etc/hosts 文件，再去寻找缓存下来的域名, 最后去上游 dns 服务器寻找。此项将禁止 dnsmasq 访问 本地 hosts</p>
+</li>
+<li><p>addn-hosts<br>自定义其他的 hosts 文件，按需求看自己要不要配哈，不配的话，会默认访问 /etc/hosts</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">addn-hosts=/usr/local/etc/dnsmasq.hosts</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>我的配置情况如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">resolv-file=/usr/local/etc/resolv.dnsmasq.conf </span><br><span class="line">listen-address=172.17.9.78,127.0.0.1</span><br><span class="line">strict-order</span><br></pre></td></tr></table></figure></p>
+<h3 id="配置-resolv-file"><a href="#配置-resolv-file" class="headerlink" title="配置 resolv-file"></a>配置 <code>resolv-file</code></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo vi /usr/local/etc/resolv.dnsmasq.conf</span><br></pre></td></tr></table></figure>
+<p>文件内容如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nameserver 127.0.0.1 // 本机</span><br><span class="line">nameserver 114.114.114.114</span><br><span class="line">nameserver 1.1.1.1</span><br><span class="line">nameserver 172.17.40.160 // 局域网本身的 DNS （因为我的页面需要请求内网接口，所以需要加上这行）</span><br></pre></td></tr></table></figure>
+<h3 id="配置-usr-local-etc-dnsmasq-hosts-或-etc-hosts"><a href="#配置-usr-local-etc-dnsmasq-hosts-或-etc-hosts" class="headerlink" title="配置 /usr/local/etc/dnsmasq.hosts 或 /etc/hosts"></a>配置 <code>/usr/local/etc/dnsmasq.hosts</code> 或 <code>/etc/hosts</code></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">172.17.9.78 hello.me</span><br></pre></td></tr></table></figure>
+<p>如果配成 127.0.0.1 hello.me，局域网其他服务器无法访问 hello.me 这个域名</p>
+<p>启动 dnsmasq</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 启动</span><br><span class="line">sudo brew services start dnsmasq</span><br><span class="line"></span><br><span class="line"># 重启</span><br><span class="line">sudo brew services restart dnsmasq</span><br><span class="line"></span><br><span class="line"># 停止</span><br><span class="line">sudo brew services stop dnsmasq</span><br></pre></td></tr></table></figure>
+<p>如果改动了泛解析规则，重启 dnsmasq 不会立即看到效果，可尝试清楚缓存<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo killall -HUP mDNSResponder</span><br></pre></td></tr></table></figure></p>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><ul>
+<li>ping 一下 hello.me，看能不能 Ping 通</li>
+<li>本机打开网页，看能不能正常访问网络。</li>
+<li>手机在于电脑连接同一个局域网的条件下，配置 wifi 的 DNS，DNS 地址为电脑的 IP，然后尝试在手机打开 hello.me, 看能否正常访问。</li>
+</ul>
+<p>测试成功的话，就可以愉快的在手机上调试本地的开发页面啦~~~</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/08/15/hello-world/" class="next">NEXT</a></div><div class="copyright"><p>© 2015 - 2019 <a href="http://yoursite.com">summerbaby</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
